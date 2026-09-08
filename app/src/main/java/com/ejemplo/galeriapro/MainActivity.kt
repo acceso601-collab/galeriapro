@@ -1,62 +1,83 @@
 package com.ejemplo.galeriapro
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.activity.viewModels
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.core.app.ActivityOptionsCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import com.ejemplo.galeriapro.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
-    private val viewModel: GalleryViewModel by viewModels()
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var viewModel: GalleryViewModel
     private lateinit var adapter: ImageAdapter
-    private lateinit var swipeRefresh: androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-    private lateinit var recyclerView: RecyclerView
+    private var isToolbarBlurred = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        swipeRefresh = findViewById(R.id.swipeRefresh)
-        recyclerView = findViewById(R.id.recyclerView)
+        viewModel = ViewModelProvider(this)[GalleryViewModel::class.java]
 
-        // Configurar Grid de 2 columnas
-        recyclerView.layoutManager = GridLayoutManager(this, 2)
-
-        adapter = ImageAdapter { image ->
-            // Abrir pantalla de detalle
-            val intent = Intent(this, DetailActivity::class.java)
-            intent.putExtra("image_url", "https://picsum.photos/id/${image.id}/1080/1920")
-            startActivity(intent)
+        adapter = ImageAdapter { image, sharedView ->
+            openDetail(image, sharedView)
         }
-        recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
+        binding.recyclerView.adapter = adapter
 
-        // Detectar scroll infinito
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        binding.swipeRefresh.setOnRefreshListener {
+            viewModel.refresh()
+        }
+
+        viewModel.images.observe(this) { images ->
+            adapter.submitList(images)
+            binding.swipeRefresh.isRefreshing = false
+            adapter.showShimmer(false)
+        }
+
+        viewModel.loading.observe(this) { isLoading ->
+            adapter.showShimmer(isLoading)
+        }
+
+        binding.fabToggle.setOnClickListener {
+            toggleGridColumns()
+        }
+
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                val offset = recyclerView.computeVerticalScrollOffset()
+                val shouldBlur = offset > 200
+                if (shouldBlur != isToolbarBlurred) {
+                    isToolbarBlurred = shouldBlur
+                    binding.toolbar.animate().alpha(if (shouldBlur) 1f else 0.3f).setDuration(200).start()
+                }
                 val layoutManager = recyclerView.layoutManager as GridLayoutManager
-                val totalItemCount = layoutManager.itemCount
-                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-                if (lastVisibleItem >= totalItemCount - 4) {
+                if (layoutManager.findLastVisibleItemPosition() >= layoutManager.itemCount - 4) {
                     viewModel.loadImages()
                 }
             }
         })
+    }
 
-        // Observar datos y actualizar UI
-        lifecycleScope.launch {
-            viewModel.images.collectLatest { list ->
-                adapter.submitList(list)
-            }
-        }
+    private fun openDetail(imageUrl: String, sharedView: View) {
+        val intent = DetailActivity.newIntent(this, imageUrl)
+        val options = ActivityOptionsCompat.makeSceneTransitionAnimation(this, sharedView, getString(R.string.transition_image))
+        startActivity(intent, options.toBundle())
+    }
 
-        swipeRefresh.setOnRefreshListener {
-            viewModel.refresh()
-            swipeRefresh.isRefreshing = false
-        }
+    private fun toggleGridColumns() {
+        val layoutManager = binding.recyclerView.layoutManager as GridLayoutManager
+        val newSpanCount = if (layoutManager.spanCount == 2) 3 else 2
+        layoutManager.spanCount = newSpanCount
+        binding.recyclerView.adapter?.notifyDataSetChanged()
+
+        binding.fabToggle.animate().rotationBy(180f).setDuration(300).withEndAction {
+            binding.fabToggle.rotation = 0f
+            binding.fabToggle.setImageResource(if (newSpanCount == 2) R.drawable.ic_grid_2 else R.drawable.ic_grid_3)
+        }.start()
     }
 }

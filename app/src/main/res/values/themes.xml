@@ -1,7 +1,18 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <style name="Theme.GaleriaPro" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">#00E5FF</item>
-        <item name="colorOnPrimary">#000000</item>
-        <item name="android:windowBackground">#0F141B</item>
+        <item name="fontFamily">@font/poppins</item>
+        <item name="android:fontFamily">@font/poppins</item>
+        <item name="colorPrimary">@color/cyan_accent</item>
+        <item name="colorOnPrimary">@color/black_deep</item>
+        <item name="colorSecondary">@color/violet_accent</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:colorBackground">@color/black_deep</item>
+        <item name="colorSurface">@color/black_surface</item>
+        <item name="colorOnSurface">@color/white_soft</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowContentTransitions">true</item>
     </style>
 </resources>

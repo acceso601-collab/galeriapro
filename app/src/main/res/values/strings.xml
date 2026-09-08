@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Galería Pro</string>
+    <string name="transition_image">shared_image</string>
+    <string name="gallery_image">Imagen de la galería</string>
+    <string name="image_detail">Imagen a detalle</string>
+</resources>
