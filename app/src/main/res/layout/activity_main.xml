@@ -18,8 +18,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@drawable/toolbar_gradient"
             app:title="Galería Pro"
-            app:titleTextColor="@color/white"
-            app:titleTextAppearance="@style/TextAppearance.App.Toolbar.Title" />
+            app:titleTextColor="@color/white" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
